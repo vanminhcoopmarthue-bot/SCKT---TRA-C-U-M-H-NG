@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1557d6">
+<meta name="description" content="Tra cứu mã hàng Co.opmart Huế, quét mã vạch UPC và tìm SKU.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>Co.opmart Huế - Tra cứu mã hàng</title>
+<style>
+:root{--blue:#1557d6;--blue2:#0846bb;--pink:#ec1683;--ink:#17233b;--muted:#68758c;--line:#d8e1f0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f3f7fc;min-height:100vh}
+header{background:linear-gradient(115deg,#1557d6,#0e4fc8);color:white;padding:24px 18px 42px}
+.head{max-width:1050px;margin:auto;display:flex;align-items:center;gap:14px}
+.mini-logo{width:46px;height:46px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}
+h1{font-size:clamp(24px,4vw,34px);margin:0 0 7px;font-weight:750}
+header p{margin:0;color:#e8efff;font-size:15px}
+main{max-width:1050px;margin:-20px auto 40px;padding:0 16px;position:relative}
+.panel{background:rgba(255,255,255,.96);border:1px solid rgba(220,229,243,.95);border-radius:20px;box-shadow:0 12px 35px #1a376b12;padding:18px}
+label{font-size:14px;font-weight:700;display:block;margin:0 0 9px}
+.search-row{display:flex;gap:9px}
+input[type=search]{flex:1;min-width:0;border:1px solid #cbd8ec;border-radius:12px;padding:15px 14px;font-size:17px;outline:none;background:#fff}
+input[type=search]:focus{border-color:var(--blue);box-shadow:0 0 0 3px #1557d61a}
+button{border:0;border-radius:12px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer}
+.primary{background:var(--blue);color:#fff}.primary:hover{background:var(--blue2)}
+.secondary{background:#edf3ff;color:#174aa8;border:1px solid #d6e3fa}
+.hint{color:var(--muted);font-size:13px;margin:10px 2px 0;line-height:1.5}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.status{margin:15px 2px 0;font-size:14px;color:var(--muted);min-height:20px}
+.status.error{color:#b42318}.status.good{color:#137547}
+.brand-watermark{position:fixed;z-index:-1;pointer-events:none;left:50%;top:56%;transform:translate(-50%,-50%);width:min(90vw,1100px);opacity:.13;max-height:55vh;object-fit:contain}
+.results{display:grid;gap:10px;margin-top:16px}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:0 5px 15px #18335b08}
+.item-top{display:flex;gap:12px;justify-content:space-between;align-items:start}
+.item-name{font-weight:750;font-size:17px;line-height:1.4}
+.badge{font-size:12px;color:#174aa8;background:#eaf1ff;padding:5px 8px;border-radius:99px;white-space:nowrap}
+.details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin-top:12px;font-size:14px}
+.detail span{display:block;color:var(--muted);font-size:12px;margin-bottom:3px}
+.detail strong{overflow-wrap:anywhere}
+.sku{font-size:24px;color:var(--blue);font-weight:800;letter-spacing:.5px}
+.empty{padding:25px;text-align:center;color:var(--muted);background:#ffffffc9;border:1px dashed #c9d5e8;border-radius:14px}
+#scanner{display:none;margin-top:15px;border-radius:16px;overflow:hidden;background:#111;padding:10px;color:#fff}
+#video{width:100%;max-height:55vh;object-fit:cover;border-radius:10px}
+.scanner-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0 0}
+footer{text-align:center;color:#71809a;font-size:12px;padding:10px 18px 28px}
+@media(max-width:600px){header{padding:18px 14px 36px}.mini-logo{width:40px;height:40px}.panel{padding:14px;border-radius:16px}.search-row{flex-wrap:wrap}input[type=search]{width:100%;flex-basis:100%;font-size:16px}.search-row .primary{width:100%}.details{grid-template-columns:1fr 1fr}.actions button{flex:1}.brand-watermark{top:62%;width:105vw;opacity:.11}}
+</style>
+</head>
+<body>
+<img class="brand-watermark" src="./logo-coopmart.jpg" alt="" aria-hidden="true">
+<header>
+  <div class="head">
+    <img class="mini-logo" src="./icon.svg" alt="Co.opmart Tra cứu mã hàng">
+    <div><h1>Tra cứu mã hàng</h1><p>Co.opmart Huế · Tìm SKU, tên hàng hoặc mã vạch</p></div>
+  </div>
+</header>
+<main>
+  <section class="panel">
+    <label for="query">Nhập SKU, mã vạch hoặc tên hàng</label>
+    <div class="search-row">
+      <input id="query" type="search" placeholder="Ví dụ: yom dau, gau do, 3200655" autocomplete="off" enterkeyhint="search">
+      <button id="searchBtn" class="primary">Tìm</button>
+    </div>
+    <p class="hint">Không cần dấu tiếng Việt. Có thể nhập nhiều từ khóa, ví dụ <b>yom dau</b>. Quét mã vạch để tra SKU tự động.</p>
+    <div class="actions">
+      <button id="scanBtn" class="secondary">▦ Quét mã vạch bằng camera</button>
+      <button id="refreshBtn" class="secondary">↻ Làm mới dữ liệu</button>
+    </div>
+    <div id="scanner">
+      <video id="video" playsinline muted></video>
+      <div class="scanner-tools"><span id="scanStatus">Đưa mã vạch vào khung hình…</span><button id="stopBtn" class="secondary">Đóng camera</button></div>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">Đang sẵn sàng tra cứu.</div>
+  </section>
+  <section id="results" class="results" aria-live="polite"></section>
+</main>
+<footer>Co.opmart Huế · Tra cứu mã hàng nội bộ</footer>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+<script>
+(() => {
+  const API_URL = 'https://script.google.com/macros/s/AKfycbylECF7vUYw8DJ9xQoKwzQuF11V6ni2VzYck47CO6i3AOY445E2U0NnLNn7TttFaz6adw/exec';
+  const $ = id => document.getElementById(id);
+  const query = $('query'), status = $('status'), results = $('results');
+  let reader = null, controls = null, lastScan = '', lastScanAt = 0;
+  const cache = new Map();
+
+  function say(message, kind='') { status.className = 'status ' + kind; status.textContent = message; }
+  function normalize(s) {
+    return String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
+  }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function beepAndVibrate() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) { const ctx = new Ctx(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type='sine'; osc.frequency.value=880; gain.gain.value=.08; osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.13); osc.onended=()=>ctx.close(); }
+    } catch(e) {}
+    try { if (navigator.vibrate) navigator.vibrate([100,50,100]); } catch(e) {}
+  }
+  function itemCard(item) {
+    return `<article class="item"><div class="item-top"><div><div class="item-name">${esc(item.name || 'Chưa có tên hàng')}</div><div class="sku">SKU: ${esc(item.sku || '—')}</div></div><span class="badge">${esc(item.pack || 'Sản phẩm')}</span></div><div class="details"><div class="detail"><span>Mã vạch UPC</span><strong>${esc(item.upc || '—')}</strong></div><div class="detail"><span>Số lượng tồn</span><strong>${esc(item.stock || '—')}</strong></div><div class="detail"><span>Giá bán</span><strong>${esc(item.price || '—')}</strong></div><div class="detail"><span>Quy cách</span><strong>${esc(item.pack || '—')}</strong></div></div></article>`;
+  }
+  function showItems(items, searched) {
+    results.innerHTML = '';
+    if (!items || !items.length) {
+      results.innerHTML = `<div class="empty">Không tìm thấy mặt hàng phù hợp với “${esc(searched)}”.</div>`;
+      return;
+    }
+    results.innerHTML = items.map(itemCard).join('');
+  }
+  async function api(params) {
+    const url = API_URL + '?' + new URLSearchParams(params).toString();
+    const res = await fetch(url, {method:'GET', redirect:'follow', cache:'no-store'});
+    if (!res.ok) throw new Error('Máy chủ trả về lỗi HTTP ' + res.status);
+    return await res.json();
+  }
+  async function search() {
+    const q = query.value.trim();
+    if (!q) { results.innerHTML=''; say('Nhập từ khóa để bắt đầu tra cứu.'); return; }
+    const key = normalize(q);
+    if (cache.has(key)) { const data=cache.get(key); showItems(data.items,q); say(`Tìm thấy ${data.items.length} mặt hàng (từ bộ nhớ tạm).`,'good'); return; }
+    say('Đang tìm kiếm…');
+    $('searchBtn').disabled = true;
+    try {
+      const data = await api({action:'search',q});
+      if (!data.ok) throw new Error(data.message || 'Không thể tìm dữ liệu.');
+      cache.set(key,data);
+      showItems(data.items,q);
+      say(`Tìm thấy ${data.items.length} mặt hàng.`,'good');
+    } catch(err) {
+      say('Chưa kết nối được dữ liệu. Kiểm tra quyền truy cập Web App hoặc thử tải lại. Chi tiết: '+err.message,'error');
+    } finally { $('searchBtn').disabled = false; }
+  }
+  async function lookupBarcode(code) {
+    query.value = code;
+    say('Đang đối chiếu mã vạch…');
+    try {
+      const data = await api({action:'barcode',code});
+      if (!data.ok) throw new Error(data.message || 'Lỗi tra cứu');
+      if (data.found && data.item) { showItems([data.item],code); say('Quét thành công — đã tìm thấy SKU '+(data.item.sku || '')+'.','good'); beepAndVibrate(); }
+      else { showItems([],code); say('Đã đọc mã vạch nhưng chưa có mã này trong danh mục.','error'); }
+    } catch(err) { say('Không tra được mã vạch: '+err.message,'error'); }
+  }
+  async function startScanner() {
+    if (!window.isSecureContext) { say('Camera cần trang HTTPS. Hãy mở app bằng GitHub Pages.','error'); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { say('Trình duyệt không hỗ trợ camera.','error'); return; }
+    if (!window.ZXingBrowser) { say('Chưa tải được thư viện quét mã. Kiểm tra kết nối mạng rồi thử lại.','error'); return; }
+    $('scanner').style.display='block';
+    $('scanBtn').disabled=true;
+    $('scanStatus').textContent='Đang mở camera…';
+    try {
+      reader = new ZXingBrowser.BrowserMultiFormatReader();
+      controls = await reader.decodeFromVideoDevice(undefined, 'video', (result, error, ctrl) => {
+        if (result) {
+          const code = String(result.getText() || '').trim();
+          const now = Date.now();
+          if (code && (code !== lastScan || now-lastScanAt > 1800)) {
+            lastScan=code; lastScanAt=now;
+            $('scanStatus').textContent='Đã đọc: '+code;
+            stopScanner(false);
+            lookupBarcode(code);
+          }
+        }
+      });
+      $('scanStatus').textContent='Đưa mã vạch vào khung hình…';
+    } catch(err) {
+      say('Không mở được camera. Hãy cấp quyền camera cho trình duyệt. '+err.message,'error');
+      stopScanner(false);
+    }
+  }
+  function stopScanner(hide=true) {
+    try { if (controls && controls.stop) controls.stop(); } catch(e) {}
+    try { if (reader && reader.reset) reader.reset(); } catch(e) {}
+    const video=$('video');
+    if (video.srcObject) video.srcObject.getTracks().forEach(track=>track.stop());
+    controls=null; reader=null; $('scanBtn').disabled=false;
+    if (hide) $('scanner').style.display='none';
+  }
+  $('searchBtn').addEventListener('click',search);
+  query.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+  $('scanBtn').addEventListener('click',startScanner);
+  $('stopBtn').addEventListener('click',()=>stopScanner(true));
+  $('refreshBtn').addEventListener('click',()=>{cache.clear();say('Đã xóa bộ nhớ tạm trên thiết bị. Hãy tìm lại để lấy dữ liệu mới.','good'); if(query.value.trim())search();});
+  window.addEventListener('pagehide',()=>stopScanner(true));
+})();
+</script>
+</body>
+</html>
+
+<script>if ("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>
